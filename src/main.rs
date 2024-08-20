@@ -56,6 +56,13 @@ fn main() {
                     println!("Failed to get listening addresses for node2.");
                 }
             },
+            (Some("node1"), Some("getaddress"), None) => {
+                let funding_address = node1.onchain_payment().new_address();
+                match funding_address {
+                    Ok(fund_addr) => println!("Node 1 Funding Address: {}", fund_addr),
+                    Err(e) => println!("Error getting funding address: {}", e),
+                }
+            }
             (Some("node1"), Some("balance"), None) => {
                 let balances = node1.list_balances();
                 println!("Node 1 Wallet Balance: {}", balances.total_onchain_balance_sats + balances.total_lightning_balance_sats);

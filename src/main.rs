@@ -1,7 +1,8 @@
 use ldk_node::lightning_invoice::Bolt11Invoice;
 use ldk_node::Builder;
 use ldk_node::bitcoin::Network;
-use std::io::{self, Write};
+use std::{io::{self, Write}, sync::Arc};
+use ldk_node::ChannelConfig;
 
 fn make_node(alias: &str, port: u16) -> ldk_node::Node {
     let mut builder = Builder::new();
@@ -38,6 +39,23 @@ fn main() {
         let argument = parts.next(); // Invoice or other arguments
 
         match (node, command, argument) {
+            (Some("node1"), Some("openchannel"), None) => {
+                let channel_config: Option<Arc<ChannelConfig>> = None;
+                let announce_channel = true;
+                // Extract the first listening address
+                if let Some(listening_addresses) = node2.listening_addresses() {
+                    if let Some(node2_addr) = listening_addresses.get(0) {
+                        match node1.connect_open_channel(node2.node_id(), node2_addr.clone(), 10000, Some(0), channel_config, announce_channel) {
+                            Ok(_) => println!("Channel successfully opened between node1 and node2."),
+                            Err(e) => println!("Failed to open channel: {}", e),
+                        }
+                    } else {
+                        println!("Node2 has no listening addresses.");
+                    }
+                } else {
+                    println!("Failed to get listening addresses for node2.");
+                }
+            },
             (Some("node1"), Some("balance"), None) => {
                 let balances = node1.list_balances();
                 println!("Node 1 Wallet Balance: {}", balances.total_onchain_balance_sats + balances.total_lightning_balance_sats);
